@@ -62,8 +62,16 @@ st.markdown("""
         border-color: #2E7D32 !important;
         color: #86EFAC !important;
     }
-    #MainMenu {visibility: hidden;}
-    header {visibility: hidden;}
+    /* Hide Deploy Button and Options Menu in header but keep sidebar collapse toggle visible */
+    [data-testid="stHeaderDeployButton"],
+    .stDeployButton,
+    #MainMenu,
+    [data-testid="stHeaderMenuButton"] {
+        display: none !important;
+    }
+    header[data-testid="stHeader"] {
+        background-color: transparent !important;
+    }
     footer {visibility: hidden;}
     .block-container {padding-top: 1.5rem !important; padding-bottom: 0rem !important;}
     
