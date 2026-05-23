@@ -19,18 +19,14 @@ The architecture operates on a **dual-track processing framework** tailored to b
 - **Interactive Simulation Controls:** Allows account managers to adjust demographic, service subscription, and billing configuration sliders in real-time to analyze how account changes impact risk indices.
 - **Dynamic Executive Briefing Generator:** Automatically compiles customer parameters, calculated metrics, and tier-specific strategic retention checklists into a downloadable, clean **Markdown (.md) briefing file** for immediate CRM logging.
 
-<p align="center">
-  <img src="assests/dashboard_mockup.png" width="850" alt="UI Showcase - Single Customer Simulation">
-</p>
+<p align="center"><img src="docs/assets/dashboard_mockup.png" width="850" alt="Single Customer Simulation Sandbox"></p>
 
 ### 2. Bulk Ingestion & Batch Prediction Engine
 - **Automated Preprocessing:** Accepts drag-and-drop raw CSV customer database uploads, mapping categorical indicators and executing one-hot feature encoding under the hood.
 - **Batch Diagnostic Charts:** Renders interactive, multi-dimensional Plotly donut charts to visualize risk tier allocations across the entire uploaded segment.
 - **Strategic Payload Exports:** Performs vector calculations and exports a fully annotated CSV data sheet mapping baseline attributes directly against predictions and mitigation instructions.
 
-<p align="center">
-  <img src="assests/batch_processing.png" width="850" alt="UI Showcase - Bulk Batch Processing">
-</p>
+<p align="center"><img src="docs/assets/batch_processing.png" width="850" alt="Bulk Ingestion & Batch Prediction Engine"></p>
 
 ---
 
