@@ -1,6 +1,7 @@
 import os
 import streamlit as st
 import pandas as pd
+import numpy as np
 import joblib
 import plotly.graph_objects as go
 import plotly.express as px
@@ -62,6 +63,7 @@ st.markdown("""
         border-color: #2E7D32 !important;
         color: #86EFAC !important;
     }
+    
     /* Hide Deploy Button and Options Menu in header but keep sidebar collapse toggle visible */
     [data-testid="stHeaderDeployButton"],
     .stDeployButton,
@@ -143,7 +145,7 @@ if app_mode == "Single Simulation":
         monthly_charges = st.number_input("Monthly Bill ($)", 15.0, 120.0, 65.0)
         total_charges = tenure * monthly_charges
 
-    # Data Processing function for single user
+    # Preprocessing
     def prepare_input_data():
         input_dict = {
             'gender': 1 if gender == "Female" else 0,
@@ -206,30 +208,70 @@ if app_mode == "Single Simulation":
 
     with col2:
         st.markdown("### Churn Risk Assessment")
+        
+        tier = "Stable"
+        card_html = ""
+        strategy_text = ""
+        
         if churn_probability >= 70:
-            st.markdown("""
+            tier = "Critical"
+            card_html = f"""
                 <div class="protocol-card protocol-critical">
                     <strong>Critical Risk Tier (70%-100%)</strong><br>
                     Operational Status: IMMEDIATE INTERVENTION MANDATED. High probability of imminent contract cancellation.<br><br>
                     <strong>VIP Account Escalation:</strong> Assign a dedicated senior customer success manager immediately. Issue proactive loyalty discounts or standard device credit adjustments.
-                </div>
-                """, unsafe_allow_html=True)
+                </div>"""
+            strategy_text = "- IMMEDIATELY route to High-Value Retention Desk.\n- Approve maximum retention credit discount (up to 25% off monthly bill).\n- Schedule a high-priority 1-on-1 account health check sync within 24 hours."
         elif churn_probability >= 30:
-            st.markdown("""
+            tier = "Elevated"
+            card_html = f"""
                 <div class="protocol-card protocol-warning">
                     <strong>Elevated Risk Tier (30%-70%)</strong><br>
                     Operational Status: CONDITIONAL MONITORING. Dynamic contract fragility flags triggered.<br><br>
                     <strong>Mitigation Strategy:</strong> Queue account into the next automated product lifecycle campaign. Offer digital self-service upgrade paths.
-                </div>
-                """, unsafe_allow_html=True)
+                </div>"""
+            strategy_text = "- Target with specialized email lifecycle re-engagement loops.\n- Propose self-service value add-on upgrades (e.g., free premium security trials).\n- Monitor usage patterns closely over the next 30 billing cycles."
         else:
-            st.markdown("""
+            card_html = f"""
                 <div class="protocol-card protocol-stable">
                     <strong>Stable Retention Tier (0%-30%)</strong><br>
                     Operational Status: STANDARD LIFECYCLE. High core customer loyalty validation index.<br><br>
                     <strong>Maintenance Track:</strong> Maintain standard operational support pathways. Eligible for multi-year renewal expansion upsells.
-                </div>
-                """, unsafe_allow_html=True)
+                </div>"""
+            strategy_text = "- Maintain standard marketing lifecycle cadences.\n- Keep flagged as stable for upcoming account volume calculations.\n- Target for multi-year contract expansion upsell options upon renewal date."
+
+        st.markdown(card_html, unsafe_allow_html=True)
+
+        # --- STEP 2: DYNAMIC BRIEF GENERATION FOR RETENTION DESK ---
+        brief_content = f"""# EXECUTIVE ESCALATION BRIEF: RETENTION TELEMETRY
+Generated: 2026 Sandbox Environment Engine
+
+## 📊 Account Diagnostic Profile
+* **Risk Score Matrix Calculation:** {churn_probability:.1f}% Risk Probability
+* **Assigned Action Tier:** {tier} Risk Track
+* **Account Lifespan (Tenure):** {tenure} Months Active
+* **Financial Vector:** ${monthly_charges:,.2f} / Month Recurring
+
+## ⚙️ Active Configurations Captured
+* **Contract Commitment Track:** {contract}
+* **Network Infrastructure System:** {internet_service}
+* **Settlement Channel:** {payment_method}
+* **Paperless Status Billing:** {paperless_billing}
+
+## ⚡ Mandatory Remediation Protocol Actions
+{strategy_text}
+
+---
+*CONFIDENTIAL REPORT — Processed via deployed XGBoost Prediction Architecture Framework Framework Engine.*"""
+
+        # Generate a clean text download trigger
+        st.download_button(
+            label="📥 Export Account Escalation Brief (.md)",
+            data=brief_content,
+            file_name=f"customer_risk_brief_{tier.lower()}.md",
+            mime="text/markdown",
+            use_container_width=True
+        )
 
     st.divider()
     st.markdown("### 📋 Live Simulation Parameters")
@@ -246,7 +288,7 @@ if app_mode == "Single Simulation":
         st.metric(label="Infrastructure Track", value=internet_service)
         st.metric(label="Settlement Method", value=payment_method)
 
-# --- TRACK 2: BULK CSV PROCESSING ---
+# --- TRACK 2: BULK CSV PROCESSING (FIXED NUMPY ERROR) ---
 else:
     st.markdown("### 📊 Bulk Ingestion & Batch Prediction Diagnostics")
     st.markdown("Upload a raw CSV file containing customer telemetry parameters to process downstream matrix scoring instantly.")
@@ -256,36 +298,31 @@ else:
     if uploaded_file is not None:
         raw_df = pd.read_csv(uploaded_file)
         
-        # Diagnostic display of raw data
         st.markdown("#### 📥 Ingested Telemetry Preview")
         st.dataframe(raw_df.head(5), use_container_width=True)
         
         try:
-            # Replicate preprocessing logic onto the batch file dataframe
             df_process = raw_df.copy()
             
-            # Binary mappings matching original features
-            if 'gender' in df_process.columns: df_process['gender'] = df_process['gender'].apply(lambda x: 1 if x == "Female" else 0)
+            if 'gender' in df_process.columns: 
+                df_process['gender'] = df_process['gender'].apply(lambda x: 1 if str(x).strip().lower() == "female" else 0)
             for binary_col in ['SeniorCitizen', 'Partner', 'Dependents', 'PhoneService', 'PaperlessBilling']:
                 if binary_col in df_process.columns:
-                    df_process[binary_col] = df_process[binary_col].apply(lambda x: 1 if str(x).strip().lower() in ['yes', '1'] else 0)
+                    df_process[binary_col] = df_process[binary_col].apply(lambda x: 1 if str(x).strip().lower() in ['yes', '1', 'true'] else 0)
             
-            # One-Hot Encoding categorization loops
             multi_cols = ['Contract', 'PaymentMethod', 'InternetService', 'OnlineSecurity', 'TechSupport', 'StreamingMovies']
             df_encoded = pd.get_dummies(df_process, columns=[c for c in multi_cols if c in df_process.columns], drop_first=False)
             
-            # Build and fill missing feature space matrix
             final_batch_features = pd.DataFrame(0, index=df_process.index, columns=expected_features)
             for col in df_encoded.columns:
                 if col in final_batch_features.columns:
                     final_batch_features[col] = df_encoded[col]
             
-            # Execute batch prediction calculations
+            # FIXED: Handle raw array values explicitly using NumPy rounding arrays safely!
             batch_probs = model.predict_proba(final_batch_features.astype(float))[:, 1] * 100
             
-            # Append risk matrix results to output dataframe
             output_df = raw_df.copy()
-            output_df['Churn_Probability_%'] = round(batch_probs, 1)
+            output_df['Churn_Probability_%'] = np.round(batch_probs, 1) # FIXED from round() to np.round()
             
             def assign_tier(prob):
                 if prob >= 70: return 'Critical'
@@ -295,7 +332,6 @@ else:
             
             st.divider()
             
-            # Layout splitting for graphs and exports
             b_col1, b_col2 = st.columns([1, 1.2], gap="large")
             
             with b_col1:
@@ -303,7 +339,6 @@ else:
                 tier_counts = output_df['Risk_Tier'].value_counts().reset_index()
                 tier_counts.columns = ['Risk_Tier', 'Count']
                 
-                # Render clean Plotly distribution layout
                 fig_pie = px.pie(
                     tier_counts, values='Count', names='Risk_Tier',
                     color='Risk_Tier',
@@ -322,7 +357,6 @@ else:
                 st.markdown("#### 📥 Export Processed Payload")
                 st.markdown("Download the fully annotated customer catalog containing evaluated risk vectors and tiered strategy markings.")
                 
-                # Transform processed frame to CSV string buffer
                 csv_buffer = output_df.to_csv(index=False).encode('utf-8')
                 
                 st.download_button(
